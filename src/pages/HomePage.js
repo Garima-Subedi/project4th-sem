@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import API from '../api';
 import ProductCard from '../components/ProductCard';
 import HeroSection from '../components/HeroSection';
-import { Drawer, IconButton, Box, Typography, Button, Grid, Container, TextField, Divider } from '@mui/material';
+import {
+  Drawer,
+  IconButton,
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Container,
+  TextField,
+  Divider,
+} from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -10,11 +21,17 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     async function fetchProducts() {
-      const response = await API.get('/products');
-      setProducts(response.data);
+      try {
+        const response = await API.get('/products');
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
     }
     fetchProducts();
   }, []);
@@ -51,10 +68,9 @@ function HomePage() {
   };
 
   const handleCheckout = () => {
-    console.log('Proceeding to checkout with items:', cartItems);
-    alert('Checkout complete!');
-    setCartItems([]); // Clear cart after checkout
-    setIsCartOpen(false);
+    const total = calculateTotal();
+    navigate('/checkout', { state: { cartItems, total } }); // Navigate with state
+    setIsCartOpen(false); // Close the cart drawer
   };
 
   return (
@@ -78,7 +94,15 @@ function HomePage() {
 
       {/* Cart Sidebar */}
       <Drawer anchor="right" open={isCartOpen} onClose={toggleCart}>
-        <Box sx={{ width: 300, padding: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box
+          sx={{
+            width: 300,
+            padding: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+          }}
+        >
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h5">Your Cart</Typography>
             <IconButton onClick={toggleCart}>
@@ -92,12 +116,24 @@ function HomePage() {
           ) : (
             <Box sx={{ flex: 1, overflowY: 'auto' }}>
               {cartItems.map((item) => (
-                <Box key={item._id} sx={{ borderBottom: '1px solid #ccc', paddingBottom: 2, marginBottom: 2 }}>
+                <Box
+                  key={item._id}
+                  sx={{
+                    borderBottom: '1px solid #ccc',
+                    paddingBottom: 2,
+                    marginBottom: 2,
+                  }}
+                >
                   <Box display="flex" alignItems="center" gap={2}>
                     <img
                       src={item.imageUrl}
                       alt={item.title}
-                      style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: '4px' }}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                      }}
                     />
                     <Box>
                       <Typography variant="h6">{item.title}</Typography>
@@ -109,9 +145,12 @@ function HomePage() {
                     label="Quantity"
                     type="number"
                     value={item.quantity}
-                    onChange={(e) => handleQuantityChange(item._id, parseInt(e.target.value, 10))}
+                    onChange={(e) =>
+                      handleQuantityChange(item._id, parseInt(e.target.value, 10))
+                    }
                     fullWidth
                     sx={{ marginTop: 1 }}
+                    inputProps={{ min: 1 }}
                   />
                   <Button
                     variant="outlined"
