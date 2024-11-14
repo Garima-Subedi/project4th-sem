@@ -6,6 +6,7 @@
 //   const [products, setProducts] = useState([]);
 //   const [title, setTitle] = useState('');
 //   const [description, setDescription] = useState('');
+//   const [cost, setCost] = useState(''); // New cost field
 //   const [image, setImage] = useState(null);
 //   const [previewUrl, setPreviewUrl] = useState(null);
 //   const [uploadProgress, setUploadProgress] = useState(0);
@@ -36,6 +37,7 @@
 //     const formData = new FormData();
 //     formData.append('title', title);
 //     formData.append('description', description);
+//     formData.append('cost', cost); // Include cost in the form data
 //     if (image) formData.append('image', image);
 
 //     try {
@@ -59,6 +61,7 @@
 
 //       setTitle('');
 //       setDescription('');
+//       setCost('');
 //       setImage(null);
 //       setPreviewUrl(null);
 //       setUploadProgress(0);
@@ -81,7 +84,7 @@
 //   const handleOrderChange = (index, newOrder) => {
 //     const updatedProducts = [...products];
 //     updatedProducts[index].order = newOrder;
-//     setProducts(updatedProducts);
+//     setProducts(updatedProducts); // Update local state only
 //   };
 
 //   const handleSaveOrder = async () => {
@@ -117,6 +120,15 @@
 //           variant="outlined"
 //           value={description}
 //           onChange={(e) => setDescription(e.target.value)}
+//           fullWidth
+//           required
+//         />
+//         <TextField
+//           label="Cost"
+//           type="number"
+//           variant="outlined"
+//           value={cost}
+//           onChange={(e) => setCost(parseFloat(e.target.value))}
 //           fullWidth
 //           required
 //         />
@@ -159,39 +171,47 @@
 //         </Button>
 //       </Box>
 
-//         <Grid container spacing={3}>
-//     {products.map((product, index) => (
-//       <Grid item key={product._id} xs={12} sm={6} md={4}>
-//         <Box sx={{ border: '1px solid #ccc', padding: 2, borderRadius: 2 }}>
-//           {product.imageUrl && (
-//             <img
-//               src={product.imageUrl}
-//               alt={product.title}
-//               style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
-//             />
-//           )}
-//           <Typography variant="h6" sx={{ color: 'black' }}>{product.title}</Typography>
-//           <Typography variant="body2">{product.description}</Typography>
-//           <TextField
-//             label="Order"
-//             type="number"
-//             value={product.order}
-//             onChange={(e) => handleOrderChange(index, parseInt(e.target.value, 10))}
-//             fullWidth
-//             sx={{ marginTop: 2 }}
-//           />
-//           <Button
-//             onClick={() => handleDelete(product._id)}
-//             variant="contained"
-//             color="secondary"
-//             sx={{ marginTop: 2 }}
-//           >
-//             Delete
-//           </Button>
-//         </Box>
+//       <Grid container spacing={3}>
+//         {products.map((product, index) => (
+//           <Grid item key={product._id} xs={12} sm={6} md={4}>
+//             <Box sx={{ border: '1px solid #ccc', padding: 2, borderRadius: 2 }}>
+//               {product.imageUrl && (
+//                 <img
+//                   src={product.imageUrl}
+//                   alt={product.title}
+//                   style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
+//                 />
+//               )}
+//               <Typography variant="h6" sx={{ color: 'black' }}>{product.title}</Typography>
+//               <Typography variant="body2">{product.description}</Typography>
+//               <Typography variant="body2">Cost: ${product.cost}</Typography> {/* Display cost */}
+//               <TextField
+//                 label="Quantity"
+//                 type="number"
+//                 defaultValue={1}
+//                 fullWidth
+//                 sx={{ marginTop: 2 }}
+//               />
+//               <TextField
+//                 label="Order"
+//                 type="number"
+//                 value={product.order}
+//                 onChange={(e) => handleOrderChange(index, parseInt(e.target.value, 10))}
+//                 fullWidth
+//                 sx={{ marginTop: 2 }}
+//               />
+//               <Button
+//                 onClick={() => handleDelete(product._id)}
+//                 variant="contained"
+//                 color="secondary"
+//                 sx={{ marginTop: 2 }}
+//               >
+//                 Delete
+//               </Button>
+//             </Box>
+//           </Grid>
+//         ))}
 //       </Grid>
-//     ))}
-//   </Grid>
 
 //       <Button
 //         variant="contained"
@@ -215,6 +235,7 @@ function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [cost, setCost] = useState('');
   const [image, setImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -245,6 +266,7 @@ function AdminDashboard() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
+    formData.append('cost', cost);
     if (image) formData.append('image', image);
 
     try {
@@ -268,6 +290,7 @@ function AdminDashboard() {
 
       setTitle('');
       setDescription('');
+      setCost('');
       setImage(null);
       setPreviewUrl(null);
       setUploadProgress(0);
@@ -290,16 +313,29 @@ function AdminDashboard() {
   const handleOrderChange = (index, newOrder) => {
     const updatedProducts = [...products];
     updatedProducts[index].order = newOrder;
-    setProducts(updatedProducts); // Update local state only
+    setProducts(updatedProducts);
   };
 
   const handleSaveOrder = async () => {
     try {
       const updatedOrders = products.map(({ _id, order }) => ({ _id, order }));
       await API.put('/products/reorder', { products: updatedOrders });
-      fetchProducts(); // Refresh the products list with new order
+      fetchProducts();
     } catch (error) {
       console.error("Error saving product order:", error);
+    }
+  };
+
+  const handleSave = async (product) => {
+    try {
+      await API.put(`/products/${product._id}`, {
+        title: product.title,
+        description: product.description,
+        cost: product.cost,
+      });
+      fetchProducts();
+    } catch (error) {
+      console.error("Error updating product:", error);
     }
   };
 
@@ -326,6 +362,15 @@ function AdminDashboard() {
           variant="outlined"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          fullWidth
+          required
+        />
+        <TextField
+          label="Cost"
+          type="number"
+          variant="outlined"
+          value={cost}
+          onChange={(e) => setCost(parseFloat(e.target.value))}
           fullWidth
           required
         />
@@ -379,8 +424,46 @@ function AdminDashboard() {
                   style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
                 />
               )}
-              <Typography variant="h6" sx={{ color: 'black' }}>{product.title}</Typography>
-              <Typography variant="body2">{product.description}</Typography>
+              <TextField
+                label="Title"
+                value={product.title}
+                onChange={(e) =>
+                  setProducts((prev) =>
+                    prev.map((p) =>
+                      p._id === product._id ? { ...p, title: e.target.value } : p
+                    )
+                  )
+                }
+                fullWidth
+                sx={{ marginBottom: 2 }}
+              />
+              <TextField
+                label="Description"
+                value={product.description}
+                onChange={(e) =>
+                  setProducts((prev) =>
+                    prev.map((p) =>
+                      p._id === product._id ? { ...p, description: e.target.value } : p
+                    )
+                  )
+                }
+                fullWidth
+                sx={{ marginBottom: 2 }}
+              />
+              <TextField
+                label="Cost"
+                type="number"
+                value={product.cost}
+                onChange={(e) =>
+                  setProducts((prev) =>
+                    prev.map((p) =>
+                      p._id === product._id ? { ...p, cost: parseFloat(e.target.value) } : p
+                    )
+                  )
+                }
+                fullWidth
+                sx={{ marginBottom: 2 }}
+              />
               <TextField
                 label="Order"
                 type="number"
@@ -390,10 +473,18 @@ function AdminDashboard() {
                 sx={{ marginTop: 2 }}
               />
               <Button
+                onClick={() => handleSave(product)}
+                variant="contained"
+                color="primary"
+                sx={{ marginTop: 2 }}
+              >
+                Save
+              </Button>
+              <Button
                 onClick={() => handleDelete(product._id)}
                 variant="contained"
                 color="secondary"
-                sx={{ marginTop: 2 }}
+                sx={{ marginTop: 2, marginLeft: 1 }}
               >
                 Delete
               </Button>

@@ -1,27 +1,45 @@
-import React from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import Typography from '@mui/material/Typography';
+import React, { useState } from 'react';
+import { Box, Typography, TextField, Button } from '@mui/material';
 
-function ProductCard({ product }) {
+function ProductCard({ product, onAddToCart }) {
+  const [quantity, setQuantity] = useState(1);
+
+  const handleQuantityChange = (event) => {
+    const value = parseInt(event.target.value, 10);
+    setQuantity(value > 0 ? value : 1); // Ensure quantity is at least 1
+  };
+
   return (
-    <Card sx={{ maxWidth: 345, margin: 2 }}>
-      <CardMedia
-        component="img"
-        height="200"
-        image={product.imageUrl || 'https://via.placeholder.com/200'}
-        alt={product.title}
+    <Box sx={{ border: '1px solid #ccc', padding: 2, borderRadius: 2 }}>
+      {product.imageUrl && (
+        <img
+          src={product.imageUrl}
+          alt={product.title}
+          style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
+        />
+      )}
+      <Typography variant="h6" sx={{ color: 'black' }}>{product.title}</Typography>
+      <Typography variant="body2">{product.description}</Typography>
+      <Typography variant="body2">Cost: ${product.cost}</Typography>
+
+      <TextField
+        label="Quantity"
+        type="number"
+        value={quantity}
+        onChange={handleQuantityChange}
+        fullWidth
+        sx={{ marginTop: 2 }}
       />
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
-          {product.title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {product.description}
-        </Typography>
-      </CardContent>
-    </Card>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => onAddToCart({ ...product, quantity })}
+        sx={{ marginTop: 2 }}
+      >
+        Add to Cart
+      </Button>
+    </Box>
   );
 }
 

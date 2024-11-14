@@ -32,9 +32,9 @@ router.put('/reorder', async (req, res) => {
   }
 });
 
-// Create a new product with Cloudinary image upload
+// Create a new product with Cloudinary image upload and cost field
 router.post('/', upload.single('image'), async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, cost } = req.body;
 
   try {
     const uploadResult = req.file
@@ -45,7 +45,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     const productCount = await Product.countDocuments();
     const order = productCount;
 
-    const product = new Product({ title, description, imageUrl, order });
+    const product = new Product({ title, description, imageUrl, order, cost });
     const savedProduct = await product.save();
 
     res.status(201).json(savedProduct);
@@ -55,10 +55,10 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-// Update an existing product with Cloudinary image upload
+// Update an existing product with editable fields and Cloudinary image upload
 router.put('/:id', upload.single('image'), async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, cost } = req.body;
 
     const existingProduct = await Product.findById(req.params.id);
     const uploadResult = req.file
@@ -67,9 +67,10 @@ router.put('/:id', upload.single('image'), async (req, res) => {
 
     const imageUrl = uploadResult.secure_url;
 
+    // Update product fields, including title, description, cost, and image
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { title, description, imageUrl },
+      { title, description, cost, imageUrl },
       { new: true }
     );
 
